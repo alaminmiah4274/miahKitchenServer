@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express();
 const port = process.env.PORT || 5000;
 require('dotenv').config();
@@ -26,14 +26,43 @@ const client = new MongoClient(uri, {
 
 async function run() {
     try {
-        // Connect the client to the server	(optional starting in v4.7)
-        await client.connect();
-        // Send a ping to confirm a successful connection
-        await client.db("admin").command({ ping: 1 });
-        console.log("Pinged your deployment. You successfully connected to MongoDB!");
+        const serviceCollection = client.db('miahKitchen').collection('services');
+        const cateringDataCollection = client.db('miahKitchen').collection('cateringData');
+
+        // to get limit data
+        app.get('/service', async (rew, res) => {
+            const query = {};
+            const cursor = serviceCollection.find(query);
+            const services = await cursor.limit(3).toArray();
+            res.send(services);
+        });
+
+        // to get all services 
+        app.get('/services', async (req, res) => {
+            const query = {};
+            const cursor = serviceCollection.find(query);
+            const services = await cursor.toArray();
+            res.send(services);
+        });
+
+        // to get individual service
+        app.get('/services/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const service = await serviceCollection.findOne(query);
+            res.send(service);
+        });
+
+        // to get catering service data
+        app.get('/cateringData', async (req, res) => {
+            const query = {};
+            const cursor = cateringDataCollection.find(query);
+            const data = await cursor.toArray();
+            res.send(data);
+        });
+
     } finally {
         // Ensures that the client will close when you finish/error
-        await client.close();
     }
 }
 run().catch(err => console.error(err));
