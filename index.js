@@ -28,8 +28,9 @@ async function run() {
     try {
         const serviceCollection = client.db('miahKitchen').collection('services');
         const cateringDataCollection = client.db('miahKitchen').collection('cateringData');
+        const reviewCollection = client.db('miahKitchen').collection('reviews');
 
-        // to get limit data
+        // to get limit food services data
         app.get('/service', async (rew, res) => {
             const query = {};
             const cursor = serviceCollection.find(query);
@@ -37,7 +38,7 @@ async function run() {
             res.send(services);
         });
 
-        // to get all services 
+        // to get all foods service data 
         app.get('/services', async (req, res) => {
             const query = {};
             const cursor = serviceCollection.find(query);
@@ -45,7 +46,7 @@ async function run() {
             res.send(services);
         });
 
-        // to get individual service
+        // to get individual food service
         app.get('/services/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
@@ -59,6 +60,18 @@ async function run() {
             const cursor = cateringDataCollection.find(query);
             const data = await cursor.toArray();
             res.send(data);
+        });
+
+        // to send all reviews data to the database 
+        app.post('/reviews', async (req, res) => {
+            const text = req.body;
+            const reviews = await reviewCollection.insertOne(text);
+            res.send(reviews);
+        });
+
+        // to get all reviews data from database 
+        app.get('/reviews', async (req, res) => {
+
         });
 
     } finally {
