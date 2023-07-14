@@ -30,6 +30,8 @@ async function run() {
         const cateringDataCollection = client.db('miahKitchen').collection('cateringData');
         const reviewCollection = client.db('miahKitchen').collection('reviews');
 
+        // ************* SERVICES *************
+
         // to get limit food services data
         app.get('/service', async (rew, res) => {
             const query = {};
@@ -62,6 +64,8 @@ async function run() {
             res.send(data);
         });
 
+        // ************ REVIEWS ************
+
         // to send all reviews data to the database 
         app.post('/reviews', async (req, res) => {
             const text = req.body;
@@ -75,6 +79,21 @@ async function run() {
             const cursor = reviewCollection.find(query);
             const allReviews = await cursor.toArray();
             res.send(allReviews);
+        });
+
+        // to get review data using email form database 
+        app.get('/review', async (req, res) => {
+            let query = {};
+
+            if (req.query.email) {
+                query = {
+                    email: req.query.email
+                };
+            };
+
+            const cursor = reviewCollection.find(query);
+            const result = await cursor.toArray();
+            res.send(result);
         });
 
     } finally {
