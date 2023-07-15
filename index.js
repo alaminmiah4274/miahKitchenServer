@@ -96,6 +96,23 @@ async function run() {
             res.send(result);
         });
 
+        // to get invidual review from the database 
+        app.get('/review/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await reviewCollection.findOne(query);
+            res.send(result);
+        });
+
+        // to delete individual review from the database 
+        app.delete('/review/:id', async (req, res) => {
+            const id = req.params.id;
+            console.log(id);
+            const query = { _id: new ObjectId(id) };
+            const result = await reviewCollection.deleteOne(query);
+            res.send(result);
+        });
+
     } finally {
         // Ensures that the client will close when you finish/error
     }
