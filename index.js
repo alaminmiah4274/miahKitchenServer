@@ -29,6 +29,7 @@ async function run() {
         const serviceCollection = client.db('miahKitchen').collection('services');
         const cateringDataCollection = client.db('miahKitchen').collection('cateringData');
         const reviewCollection = client.db('miahKitchen').collection('reviews');
+        const orderCollection = client.db('miahKitchen').collection('orders');
 
         // ************* SERVICES *************
 
@@ -68,8 +69,8 @@ async function run() {
 
         // to send all reviews data to the database 
         app.post('/reviews', async (req, res) => {
-            const text = req.body;
-            const reviews = await reviewCollection.insertOne(text);
+            const query = req.body;
+            const reviews = await reviewCollection.insertOne(query);
             res.send(reviews);
         });
 
@@ -110,6 +111,23 @@ async function run() {
             console.log(id);
             const query = { _id: new ObjectId(id) };
             const result = await reviewCollection.deleteOne(query);
+            res.send(result);
+        });
+
+        // ************ ORDERS ************
+
+        // to send order to the database 
+        app.post('/orders', async (req, res) => {
+            const query = req.body;
+            const result = await orderCollection.insertOne(query);
+            res.send(result);
+        });
+
+        // to get review from the database 
+        app.get('/orders', async (req, res) => {
+            const query = {};
+            const cursor = orderCollection.find(query);
+            const result = await cursor.toArray();
             res.send(result);
         });
 
