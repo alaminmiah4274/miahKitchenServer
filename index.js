@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express();
+const jwt = require('jsonwebtoken');
 const port = process.env.PORT || 5000;
 require('dotenv').config();
 
@@ -24,12 +25,38 @@ const client = new MongoClient(uri, {
     }
 });
 
+// to check jwt token got from the client side 
+function verifyJWT(req, res, next) {
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader) {
+        return res.status(401).send({ message: 'Unauthorized access' });
+    };
+
+    const token = authHeader.split(' ')[1];
+    jwt.verify(token, process.env.ACCESS_SECRET_TOKEN, function (err, decoded) {
+        if (err) {
+            return res.status(403).send({ message: 'Forbidden access' });
+        };
+
+        req.decoded = decoded;
+        next();
+    });
+};
+
 async function run() {
     try {
         const serviceCollection = client.db('miahKitchen').collection('services');
         const cateringDataCollection = client.db('miahKitchen').collection('cateringData');
         const reviewCollection = client.db('miahKitchen').collection('reviews');
         const orderCollection = client.db('miahKitchen').collection('orders');
+
+        // to create jwt token 
+        app.post('/jwt', (req, res) => {
+            const user = req.body;
+            const token = jwt.sign(user, process.env.ACCESS_SECRET_TOKEN, { expiresIn: '1d' });
+            res.send({ token });
+        });
 
         // ************* SERVICES *************
 
@@ -83,7 +110,13 @@ async function run() {
         });
 
         // to get review data using email form database 
-        app.get('/review', async (req, res) => {
+        app.get('/review', verifyJWT, async (req, res) => {
+
+            const decoded = req.decoded;
+            if (decoded.email !== req.query.email) {
+                res.status(403).send({ message: 'unauthorized access' });
+            };
+
             let query = {};
 
             if (req.query.email) {
@@ -123,9 +156,22 @@ async function run() {
             res.send(result);
         });
 
-        // to get review from the database 
-        app.get('/orders', async (req, res) => {
-            const query = {};
+        // to get individual order using email id from the database 
+        app.get('/orders', verifyJWT, async (req, res) => {
+
+            const decoded = req.decoded;
+            if (decoded.email !== req.query.email) {
+                res.status(403).send({ message: 'unauthorized access' });
+            };
+
+            let query = {};
+
+            if (req.query.email) {
+                query = {
+                    email: req.query.email
+                };
+            };
+
             const cursor = orderCollection.find(query);
             const result = await cursor.toArray();
             res.send(result);
